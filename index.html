@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Venus Foundry — Dyson Swarm Cinematic</title>
+<style>
+  :root{
+    --bg:#02040b; --glass:rgba(7,12,28,.58); --line:rgba(160,210,255,.25);
+    --text:#eef7ff; --muted:#a9b8d6; --cyan:#72e8ff; --gold:#ffd77a; --warn:#ffb66b;
+  }
+  *{box-sizing:border-box} html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text)}
+  canvas{position:fixed;inset:0;width:100%;height:100%;display:block;background:#000}
+  .brand{position:fixed;left:22px;top:22px;z-index:5;display:flex;align-items:center;gap:12px;padding:12px 16px;border:1px solid var(--line);border-radius:20px;background:rgba(4,8,18,.44);backdrop-filter:blur(14px);box-shadow:0 0 35px rgba(90,190,255,.08)}
+  .sunicon{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle,#fff 0 18%,#ffe38a 20% 40%,#ff981d 43% 70%,rgba(255,140,0,.2) 72%);box-shadow:0 0 20px #ff9d2e}
+  .brand b{letter-spacing:.22em;font-size:14px}.brand span{display:block;color:var(--muted);font-size:13px;letter-spacing:.08em;margin-top:2px}
+  .narration{position:fixed;left:50%;bottom:9%;transform:translateX(-50%);z-index:4;width:min(760px,86vw);text-align:center;font-size:clamp(22px,3vw,44px);line-height:1.05;font-weight:750;letter-spacing:-.035em;text-shadow:0 0 30px rgba(0,0,0,.9);opacity:0;transition:opacity 1.2s ease}
+  .narration.show{opacity:1}.narration small{display:block;margin-top:16px;font-size:clamp(12px,1.2vw,15px);letter-spacing:.12em;text-transform:uppercase;color:#b9dcff;font-weight:650}
+  .hud{position:fixed;right:18px;bottom:18px;z-index:6;width:min(360px,calc(100vw - 36px));border:1px solid var(--line);border-radius:20px;background:var(--glass);backdrop-filter:blur(18px);box-shadow:0 12px 50px rgba(0,0,0,.35);overflow:hidden;transition:transform .35s ease,opacity .35s ease}.hud.min{transform:translateY(calc(100% - 54px))}
+  .hudHead{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid rgba(160,210,255,.16);cursor:pointer}.hudHead b{font-size:13px;letter-spacing:.18em;color:#96efff}.hudHead button,.pill button{background:rgba(120,190,255,.12);color:var(--text);border:1px solid rgba(160,210,255,.28);border-radius:999px;padding:7px 10px;font-weight:700;cursor:pointer}
+  .hudBody{padding:14px 16px}.stat{margin:0 0 12px}.stat label{display:flex;justify-content:space-between;gap:12px;color:var(--muted);font-size:13px}.bar{height:6px;border-radius:99px;background:rgba(255,255,255,.12);overflow:hidden;margin-top:6px}.fill{height:100%;width:0%;background:linear-gradient(90deg,var(--cyan),#f4ff9e,var(--gold));box-shadow:0 0 12px rgba(114,232,255,.6)}
+  .controls{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.controls button{border:1px solid rgba(160,210,255,.28);background:rgba(12,22,48,.72);color:#dff8ff;border-radius:12px;padding:10px;font-weight:750;cursor:pointer}.controls button:hover{background:rgba(40,80,140,.72)}
+  .method{position:fixed;inset:auto 18px 84px auto;z-index:8;width:min(460px,calc(100vw - 36px));max-height:70vh;overflow:auto;padding:18px;border:1px solid var(--line);border-radius:20px;background:rgba(4,8,18,.84);backdrop-filter:blur(18px);box-shadow:0 20px 80px rgba(0,0,0,.55);display:none}.method.show{display:block}.method h2{margin:0 0 8px;font-size:18px;color:#9bf1ff}.method p,.method li{color:#c7d3ec;font-size:14px;line-height:1.5}.method button{float:right;background:transparent;border:0;color:#fff;font-size:22px;cursor:pointer}
+  .event{position:fixed;left:50%;top:22px;transform:translateX(-50%) translateY(-20px);z-index:7;opacity:0;padding:12px 16px;border:1px solid rgba(255,215,122,.35);border-radius:999px;background:rgba(25,18,5,.62);backdrop-filter:blur(14px);color:#ffe9a8;font-weight:700;box-shadow:0 0 40px rgba(255,190,80,.14);transition:.45s ease}.event.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .hint{position:fixed;left:22px;bottom:20px;z-index:5;color:rgba(225,240,255,.62);font-size:12px;letter-spacing:.05em}.start{position:fixed;inset:0;z-index:9;display:grid;place-items:center;background:radial-gradient(circle at 50% 50%,rgba(40,80,160,.15),rgba(0,0,0,.9) 52%,#000);transition:opacity 1s ease}.start.hide{opacity:0;pointer-events:none}.startCard{text-align:center;width:min(720px,88vw)}.startCard h1{font-size:clamp(42px,8vw,92px);line-height:.88;margin:0 0 20px;letter-spacing:-.08em}.startCard p{color:#c6d5f0;font-size:18px;max-width:620px;margin:0 auto 28px;line-height:1.45}.startCard button{font-size:16px;font-weight:850;border:0;border-radius:999px;padding:15px 24px;background:linear-gradient(135deg,#fff1a2,#ffb557);color:#171006;cursor:pointer;box-shadow:0 0 50px rgba(255,180,70,.35)}
+  @media(max-width:760px){.brand{left:14px;top:14px;padding:10px 12px}.brand b{font-size:12px}.brand span{font-size:12px}.hud{right:10px;bottom:10px;width:calc(100vw - 20px)}.hint{display:none}.narration{bottom:16%;}.controls{grid-template-columns:1fr 1fr}.method{right:10px;bottom:70px;width:calc(100vw - 20px)}}
+</style>
+</head>
+<body>
+<canvas id="space"></canvas>
+<div class="start" id="start"><div class="startCard"><h1>Venus Foundry</h1><p>A cinematic fiction of humanity building a Dyson swarm: countless independent solar collectors orbiting the Sun, made from material harvested from Venus.</p><button id="launch">Begin cinematic</button></div></div>
+<div class="brand"><div class="sunicon"></div><div><b>VENUS FOUNDRY</b><span>Dyson Swarm Cinematic</span></div></div>
+<div class="narration" id="narration"></div>
+<div class="event" id="event">Solar storm reroutes launch window</div>
+<div class="hud min" id="hud"><div class="hudHead" id="hudHead"><b>ORBITAL CONSOLE</b><button id="minBtn">Open</button></div><div class="hudBody">
+  <div class="stat"><label><span>Venus material used</span><b id="mat">0.000%</b></label><div class="bar"><div class="fill" id="matbar"></div></div></div>
+  <div class="stat"><label><span>Collectors deployed</span><b id="col">0</b></label><div class="bar"><div class="fill" id="colbar"></div></div></div>
+  <div class="stat"><label><span>Power captured</span><b id="pow">0 TW</b></label><div class="bar"><div class="fill" id="powbar"></div></div></div>
+  <div class="stat"><label><span>Elapsed project time</span><b id="yrs">0 years</b></label><div class="bar"><div class="fill" id="yrsbar"></div></div></div>
+  <div class="stat"><label><span>Estimated present-dollar cost</span><b id="cost">$0</b></label><div class="bar"><div class="fill" id="costbar"></div></div></div>
+  <div class="controls"><button id="build">Start build</button><button id="mode">Auto camera: on</button><button id="labels">Labels: on</button><button id="methodBtn">Method</button></div>
+</div></div>
+<div class="method" id="method"><button id="closeMethod">×</button><h2>Fictional computation method</h2><p>This prototype uses a deliberately simplified present-dollar model. It is not a real engineering estimate.</p><ul><li>Each collector represents a fictional industrial package: mining, refining, launch, orbital placement, and control systems.</li><li>Base cost starts at roughly <b>$120 billion per collector-equivalent package</b>, then falls as automation and launch infrastructure improve.</li><li>Time advances faster than real time so centuries of construction can be shown in minutes.</li><li>Power captured scales with collector count and solar proximity, but remains symbolic.</li><li>Venus degradation is visualized as a material-use percentage, not literal planetary physics.</li></ul><p>The key idea respected here: this is a <b>swarm</b> of independent orbiting collectors, not a solid shell.</p></div>
+<div class="hint">Drag to orbit • Scroll/pinch to zoom • Console can be collapsed</div>
+<script>
+(() => {
+const canvas=document.getElementById('space'), ctx=canvas.getContext('2d',{alpha:false});
+let W=0,H=0,DPR=1; function resize(){DPR=Math.min(devicePixelRatio||1,2);W=innerWidth;H=innerHeight;canvas.width=W*DPR;canvas.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0)} addEventListener('resize',resize); resize();
+const rand=(a,b)=>a+Math.random()*(b-a); const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+let t=0, started=false, phase=0, build=false, auto=true, showLabels=true, cam={yaw:.25,pitch:.35,zoom:1.0,targetZoom:1.0};
+let last=performance.now(), idle=0;
+const stars=[], galaxy=[], dust=[], collectors=[], streams=[], asteroids=[];
+for(let i=0;i<2600;i++){let arm=Math.random()<.72; let x=rand(-1,1), y=rand(-.25,.25); if(arm){x*=Math.abs(x)*1.6;y+=Math.sin(x*3.2)*.11+rand(-.08,.08)} galaxy.push({x,y,z:rand(-.5,.8),s:rand(.35,1.8),c:Math.random()<.55?'#bfefff':(Math.random()<.7?'#fff1b7':'#ffb36f'),tw:rand(0,6.28)});}
+for(let i=0;i<1600;i++) stars.push({x:rand(-1,1),y:rand(-1,1),z:rand(.1,2.2),s:rand(.3,1.6),v:rand(.1,.9)});
+for(let i=0;i<170;i++) dust.push({a:rand(0,6.28),r:rand(120,390),z:rand(-90,90),s:rand(.3,1.2)});
+for(let i=0;i<330;i++) asteroids.push({a:rand(0,6.28),r:rand(350,450),z:rand(-35,35),s:rand(.4,1.3),v:rand(.05,.2)});
+const bodies=[{name:'Mercury',r:78,size:4,color:'#c7b39b',speed:.45},{name:'Venus',r:112,size:10,color:'#e1b26d',speed:.28},{name:'Earth',r:155,size:9,color:'#25b8ff',speed:.22},{name:'Mars',r:205,size:6,color:'#d46c55',speed:.17}];
+let sim={years:0,material:0,cols:0,power:0,cost:0,automation:1};
+function project(x,y,z){let cy=Math.cos(cam.yaw), sy=Math.sin(cam.yaw), cp=Math.cos(cam.pitch), sp=Math.sin(cam.pitch); let X=x*cy-z*sy, Z=x*sy+z*cy, Y=y*cp-Z*sp; Z=y*sp+Z*cp+650/cam.zoom; let f=520/Z*cam.zoom; return {x:W/2+X*f,y:H/2+Y*f,z:Z,scale:f};}
+function glow(x,y,r,c,a=1){let g=ctx.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,c);g.addColorStop(.25,c.replace(')',`,${a*.6})`).replace('rgb','rgba'));g.addColorStop(1,'rgba(0,0,0,0)');ctx.fillStyle=g;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();}
+function drawGalaxy(dt){ctx.fillStyle='rgb(1,3,10)';ctx.fillRect(0,0,W,H); let zoom=1+phase*2.8; ctx.save(); ctx.translate(W/2,H/2); ctx.rotate(-.13); for(const g of galaxy){let px=g.x*W*.46*zoom, py=g.y*H*.82*zoom; let fade=clamp(1-phase*.85,0,1); ctx.globalAlpha=fade*(.35+.65*Math.sin(t*.001+g.tw)**2); ctx.fillStyle=g.c; ctx.beginPath(); ctx.arc(px,py,g.s*(1+phase*1.5),0,7); ctx.fill(); } ctx.restore(); ctx.globalAlpha=1; for(const s of stars){let k=(1/(s.z-phase*1.6+1.2)); let x=W/2+s.x*W*k, y=H/2+s.y*H*k; if(x<0||x>W||y<0||y>H)continue; ctx.globalAlpha=clamp(.18+phase,0,1); ctx.fillStyle='#dff5ff'; ctx.fillRect(x,y,s.s*k,s.s*k); if(phase>.12){ctx.strokeStyle='rgba(180,220,255,.12)';ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x+s.x*70*phase,y+s.y*70*phase);ctx.stroke();}}
+ ctx.globalAlpha=1; if(phase>.56){let a=clamp((phase-.56)/.28,0,1); let x=W/2,y=H/2,r=40+phase*120; glow(x,y,r*3,'rgb(255,135,30)',a); ctx.fillStyle=`rgba(255,244,190,${a})`;ctx.beginPath();ctx.arc(x,y,r*.38,0,7);ctx.fill();}}
+function drawOrbit(r){ctx.strokeStyle='rgba(150,210,255,.16)';ctx.lineWidth=1;ctx.beginPath();for(let i=0;i<=220;i++){let a=i/220*7, p=project(Math.cos(a)*r,0,Math.sin(a)*r); if(i)ctx.lineTo(p.x,p.y); else ctx.moveTo(p.x,p.y)}ctx.stroke();}
+function drawSolar(dt){ctx.fillStyle='rgba(1,3,10,.34)';ctx.fillRect(0,0,W,H); for(const s of stars){let x=(s.x*.5+.5)*W+Math.sin(t*.00006*s.v)*40,y=(s.y*.5+.5)*H;ctx.globalAlpha=.25;ctx.fillStyle='#dff5ff';ctx.fillRect(x,y,s.s,s.s)} ctx.globalAlpha=1;
+ if(auto){cam.yaw+=dt*.000035; cam.pitch=.32+Math.sin(t*.00008)*.14; cam.targetZoom=1.05+Math.sin(t*.00005)*.18;} cam.zoom+=(cam.targetZoom-cam.zoom)*.04;
+ for(const d of dust){d.a+=dt*.00003; let p=project(Math.cos(d.a)*d.r,d.z,Math.sin(d.a)*d.r);ctx.globalAlpha=.35;ctx.fillStyle='rgba(130,230,255,.8)';ctx.fillRect(p.x,p.y,d.s*p.scale,d.s*p.scale)} ctx.globalAlpha=1;
+ for(let r of [78,112,155,205,400]) drawOrbit(r);
+ let sun=project(0,0,0); let corona=70*sun.scale; glow(sun.x,sun.y,corona*5,'rgb(255,126,22)',.9); glow(sun.x,sun.y,corona*2.4,'rgb(255,210,75)',.8); ctx.fillStyle='#fff4c9';ctx.beginPath();ctx.arc(sun.x,sun.y,28*sun.scale,0,7);ctx.fill();
+ ctx.strokeStyle='rgba(255,226,120,.45)';ctx.lineWidth=2;ctx.setLineDash([12,18]);ctx.beginPath();ctx.arc(sun.x,sun.y,52*sun.scale*(1+Math.sin(t*.002)*.04),0,7);ctx.stroke();ctx.setLineDash([]);
+ bodies.forEach((b,idx)=>{let a=t*.00005*b.speed+idx*1.2; if(b.name==='Venus') venusAngle=a; let p=project(Math.cos(a)*b.r,0,Math.sin(a)*b.r); if(b.name==='Venus') venusPos=p; if(b.name==='Earth') earthPos=p; glow(p.x,p.y,b.size*8*p.scale,b.color,.45); ctx.fillStyle=b.color;ctx.beginPath();let sz=b.size*p.scale*(b.name==='Venus'?(1-sim.material*.02):1);ctx.arc(p.x,p.y,sz,0,7);ctx.fill(); if(b.name==='Venus'&&sim.material>0){ctx.fillStyle=`rgba(20,12,8,${clamp(sim.material*6,0,.55)})`;ctx.beginPath();ctx.arc(p.x,p.y,sz*1.05,0,7);ctx.fill();} if(b.name==='Earth') {glow(p.x,p.y,30*p.scale*(1+sim.power*.003),'rgb(64,220,255)',clamp(sim.power*.008,0,.8));}
+ if(showLabels){ctx.fillStyle='rgba(230,245,255,.88)';ctx.font='14px system-ui';ctx.fillText(b.name,p.x+12,p.y-8)}});
+ for(const a of asteroids){a.a+=dt*.00005*a.v; let p=project(Math.cos(a.a)*a.r,a.z,Math.sin(a.a)*a.r);ctx.globalAlpha=.45;ctx.fillStyle='#c9d4df';ctx.fillRect(p.x,p.y,a.s*p.scale,a.s*p.scale)} ctx.globalAlpha=1;
+ if(build && Math.random()<.08){streams.push({life:0,a:venusAngle+rand(-.08,.08),off:rand(-8,8)});} for(let i=streams.length-1;i>=0;i--){let s=streams[i];s.life+=dt*.00025;let q=clamp(s.life,0,1);let r=112+(54-112)*q;let a=s.a+q*1.8;let p=project(Math.cos(a)*r,s.off*(1-q),Math.sin(a)*r);ctx.fillStyle='rgba(255,218,114,.9)';ctx.beginPath();ctx.arc(p.x,p.y,2.2*p.scale,0,7);ctx.fill();if(q>=1){collectors.push({a:a,r:rand(48,72),z:rand(-10,10),s:rand(1.1,2.2),v:rand(.15,.55)});streams.splice(i,1)}}
+ for(const c of collectors){c.a+=dt*.00008*c.v;let p=project(Math.cos(c.a)*c.r,c.z,Math.sin(c.a)*c.r);ctx.fillStyle='rgba(255,232,145,.95)';ctx.fillRect(p.x,p.y,c.s*p.scale,c.s*p.scale);}
+ if(showLabels){ctx.fillStyle='rgba(225,245,255,.8)';ctx.font='14px system-ui';ctx.fillText('Dyson swarm: independent collectors',sun.x+72*sun.scale,sun.y-80*sun.scale)}
+}
+let venusAngle=0, venusPos=null, earthPos=null;
+function step(dt){t+=dt;if(started) phase=clamp(phase+dt*.00006,0,1); if(build){sim.years+=dt*.018; let rate=(.75+sim.automation*.35); sim.cols+=dt*.018*rate; sim.material=sim.cols/260000; sim.power=sim.cols*.0078; sim.cost=sim.cols*120e9*Math.pow(.992,Math.min(sim.cols,520)); while(collectors.length<Math.min(sim.cols,900) && Math.random()<.4) collectors.push({a:rand(0,7),r:rand(48,78),z:rand(-15,15),s:rand(1,2),v:rand(.15,.55)}); updateHUD(); if(Math.random()<dt*.00008) event();}
+ if(phase<.82) drawGalaxy(dt); else drawSolar(dt); requestAnimationFrame(loop)}
+function updateHUD(){mat.textContent=(sim.material*100).toFixed(4)+'%'; col.textContent=Math.floor(sim.cols).toLocaleString(); pow.textContent=sim.power<1000?sim.power.toFixed(1)+' TW':(sim.power/1000).toFixed(2)+' PW'; yrs.textContent=Math.floor(sim.years).toLocaleString()+' years'; cost.textContent='$'+(sim.cost/1e12).toFixed(1)+'T'; matbar.style.width=clamp(sim.material*5000,0,100)+'%'; colbar.style.width=clamp(sim.cols/5000*100,0,100)+'%'; powbar.style.width=clamp(sim.power/1000*100,0,100)+'%'; yrsbar.style.width=clamp(sim.years/1200*100,0,100)+'%'; costbar.style.width=clamp(sim.cost/4e15*100,0,100)+'%'}
+function event(){const e=['Solar storm: launch window shifted','Autonomous foundries improve yield','Orbital traffic control recalculating swarm lanes','Venus refinery output increased','Collector array self-aligns successfully'];eventEl.textContent=e[Math.floor(Math.random()*e.length)];eventEl.classList.add('show');setTimeout(()=>eventEl.classList.remove('show'),2600)}
+function narrate(){const lines=[['A galaxy of ordinary stars.', 'One of them will become the site of an impossible construction project.'],['The camera finds the Sun.', 'A modest yellow star. A ridiculous amount of power.'],['Not a solid sphere.', 'A Dyson swarm: countless independent collectors in solar orbit.'],['Venus becomes the foundry.', 'Material leaves the planet, becomes machines, and joins the swarm.']];let i=0;setInterval(()=>{if(!started)return; narration.innerHTML=lines[i%lines.length][0]+'<small>'+lines[i%lines.length][1]+'</small>';narration.classList.add('show');setTimeout(()=>narration.classList.remove('show'),5200);i++;},7600)}
+const eventEl=document.getElementById('event');
+document.getElementById('launch').onclick=()=>{started=true;document.getElementById('start').classList.add('hide');setTimeout(()=>{build=true;document.getElementById('hud').classList.remove('min');minBtn.textContent='Min';},14000)};
+document.getElementById('build').onclick=()=>{build=!build;buildBtn.textContent=build?'Pause build':'Start build'}; const buildBtn=document.getElementById('build');
+document.getElementById('mode').onclick=()=>{auto=!auto;mode.textContent='Auto camera: '+(auto?'on':'off')};
+document.getElementById('labels').onclick=()=>{showLabels=!showLabels;labels.textContent='Labels: '+(showLabels?'on':'off')};
+document.getElementById('hudHead').onclick=()=>{hud.classList.toggle('min');minBtn.textContent=hud.classList.contains('min')?'Open':'Min'};
+document.getElementById('methodBtn').onclick=(e)=>{e.stopPropagation();method.classList.add('show')}; document.getElementById('closeMethod').onclick=()=>method.classList.remove('show');
+let dragging=false,lx=0,ly=0; canvas.addEventListener('pointerdown',e=>{dragging=true;auto=false;mode.textContent='Auto camera: off';lx=e.clientX;ly=e.clientY}); addEventListener('pointerup',()=>dragging=false); addEventListener('pointermove',e=>{if(!dragging)return;cam.yaw+=(e.clientX-lx)*.006;cam.pitch=clamp(cam.pitch+(e.clientY-ly)*.004,-.9,.9);lx=e.clientX;ly=e.clientY}); addEventListener('wheel',e=>{cam.targetZoom=clamp(cam.targetZoom*(e.deltaY>0?.92:1.08),.55,2.4)});
+function loop(now){let dt=Math.min(50,now-last);last=now;step(dt)} narrate(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
